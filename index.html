@@ -123,7 +123,51 @@
             </div>
         </div>
     </div>
-
+    
+    <!-- How to Use Simulator Section -->
+    <div class="py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl lg:text-center">
+                <h2 class="text-base font-semibold leading-7 text-cyan-400">시뮬레이터 사용 방법</h2>
+                <p class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">단계별 가이드</p>
+                <p class="mt-6 text-lg leading-8 text-gray-400">
+                    아래의 간단한 4단계를 따라 시스템의 모든 기능을 완벽하게 테스트해 보세요.
+                </p>
+            </div>
+            <div class="mx-auto mt-16 max-w-4xl">
+                <ol class="space-y-12">
+                    <li class="flex flex-col sm:flex-row gap-x-6">
+                        <div class="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-cyan-600 text-2xl font-bold text-white mb-4 sm:mb-0">1</div>
+                        <div>
+                            <h3 class="text-xl font-semibold leading-7 text-white">테이블 설정</h3>
+                            <p class="mt-2 text-base leading-7 text-gray-400">먼저 <code class="bg-gray-700 text-orange-400 rounded px-1 py-0.5">SET TABLE</code> 버튼을 눌러 설정 모드를 활성화하세요. 1열의 플레이어 버튼들을 클릭하여 참가 여부 (ACTIVE) 또는 빈자리 (EMPTY) 상태를 지정할 수 있습니다. 설정이 끝나면 다시 <code class="bg-gray-700 text-orange-400 rounded px-1 py-0.5">SET TABLE</code>을 눌러 종료합니다.</p>
+                        </div>
+                    </li>
+                    <li class="flex flex-col sm:flex-row gap-x-6">
+                         <div class="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-cyan-600 text-2xl font-bold text-white mb-4 sm:mb-0">2</div>
+                        <div>
+                            <h3 class="text-xl font-semibold leading-7 text-white">새 핸드 시작</h3>
+                            <p class="mt-2 text-base leading-7 text-gray-400"><code class="bg-gray-700 text-blue-400 rounded px-1 py-0.5">NEW HAND</code> 버튼을 누르면 게임이 시작됩니다. 시스템이 자동으로 딜러 버튼 위치를 계산하고, 첫 액션 플레이어의 <code class="bg-gray-700 text-green-400 rounded px-1 py-0.5">STATE</code> 버튼을 녹색으로 점멸시켜 누구의 차례인지 알려줍니다.</p>
+                        </div>
+                    </li>
+                    <li class="flex flex-col sm:flex-row gap-x-6">
+                         <div class="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-cyan-600 text-2xl font-bold text-white mb-4 sm:mb-0">3</div>
+                        <div>
+                            <h3 class="text-xl font-semibold leading-7 text-white">게임 플레이</h3>
+                            <p class="mt-2 text-base leading-7 text-gray-400">점멸하는 버튼의 위치를 보고, 실제 선수의 액션에 맞춰 4열의 중앙 제어 버튼 (<code class="bg-gray-700 text-green-400 rounded px-1 py-0.5">CALL/CHK</code>, <code class="bg-gray-700 text-green-300 rounded px-1 py-0.5">RAISE</code>, <code class="bg-gray-700 text-red-400 rounded px-1 py-0.5">FOLD</code>) 중 하나를 누르세요. 시스템이 모든 것을 알아서 처리합니다.</p>
+                        </div>
+                    </li>
+                     <li class="flex flex-col sm:flex-row gap-x-6">
+                         <div class="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-cyan-600 text-2xl font-bold text-white mb-4 sm:mb-0">4</div>
+                        <div>
+                            <h3 class="text-xl font-semibold leading-7 text-white">상태 확인 및 오류 수정</h3>
+                            <p class="mt-2 text-base leading-7 text-gray-400">우측 패널에서 시스템의 주요 변수 값과 모든 이벤트 로그를 실시간으로 확인할 수 있습니다. 만약 실수를 했다면, 주저 없이 <code class="bg-gray-700 text-pink-400 rounded px-1 py-0.5">UNDO</code> 버튼을 눌러 마지막 행동을 되돌리세요.</p>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
 
     <!-- Simulator Section -->
     <section id="simulator" class="py-24 sm:py-32">
@@ -203,7 +247,7 @@
     <!-- Footer -->
     <footer class="bg-gray-900">
         <div class="mx-auto max-w-7xl overflow-hidden py-12 px-6 lg:px-8">
-            <p class="text-center text-xs leading-5 text-gray-500">&copy; 2024 Hybrid Poker Switching System. All rights reserved.</p>
+            <p class="text-center text-xs leading-5 text-gray-500">&copy; GG PRODUCTION. All rights reserved.</p>
         </div>
     </footer>
 
