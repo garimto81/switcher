@@ -293,6 +293,19 @@
                 history.push(JSON.parse(JSON.stringify(state)));
             }
 
+            function findNextSeat(startSeatId) {
+                if (startSeatId === null || startSeatId === 0) startSeatId = state.players.length;
+                let currentSeatId = startSeatId;
+                for (let i = 0; i < state.players.length; i++) {
+                    currentSeatId = (currentSeatId % state.players.length) + 1;
+                    const player = state.players.find(p => p.id === currentSeatId);
+                    if (player.status !== 'empty') {
+                        return player.id;
+                    }
+                }
+                return null;
+            }
+
             function findNextPlayer(startPlayerId) {
                 if (startPlayerId === null || startPlayerId === 0) startPlayerId = state.players.length;
                 let currentPlayerId = startPlayerId;
@@ -320,24 +333,28 @@
                 switch (action) {
                     case 'NEW HAND':
                         state.street = 'preflop';
-                        state.dealerButtonPosition = findNextPlayer(state.dealerButtonPosition) || 1;
                         state.players.forEach(p => {
                             if (p.status !== 'empty') p.status = 'active';
                         });
 
-                        const activePlayers = state.players.filter(p=>p.status === 'active');
-                        if (activePlayers.length < 2) {
+                        const participatingPlayers = state.players.filter(p=>p.status !== 'empty');
+                        if (participatingPlayers.length < 2) {
                              logEvent('플레이어가 2명 미만이라 핸드를 시작할 수 없습니다.', 'error');
                              return;
                         }
 
+                        state.dealerButtonPosition = findNextSeat(state.dealerButtonPosition);
                         const sbPosition = findNextPlayer(state.dealerButtonPosition);
                         const bbPosition = findNextPlayer(sbPosition);
                         state.actionOnPlayer = findNextPlayer(bbPosition);
                         state.lastAggressorPlayer = bbPosition;
                         
-                        logEvent(`<b>새 핸드 시작.</b> 버튼:${state.dealerButtonPosition}, SB:${sbPosition}, BB:${bbPosition}`, 'system');
-                        logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
+                        logEvent(`<b>새 핸드 시작.</b> 버튼:${state.dealerButtonPosition}, SB:${sbPosition || 'N/A'}, BB:${bbPosition || 'N/A'}`, 'system');
+                        if(state.actionOnPlayer) {
+                            logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
+                        } else {
+                            logEvent('액션 가능한 플레이어가 없습니다.', 'error');
+                        }
                         break;
 
                     case 'SET TABLE':
@@ -350,7 +367,7 @@
                         if (!currentPlayerId) break;
                         logEvent(`P-${currentPlayerId} 가 <b>콜/체크</b>`, 'action');
                         
-                        if (currentPlayerId === state.lastAggressorPlayer || countActivePlayers() === 0) {
+                        if (currentPlayerId === state.lastAggressorPlayer || countActivePlayers() <= 1) {
                             state.street = { 'preflop': 'flop', 'flop': 'turn', 'turn': 'river', 'river': 'showdown' }[state.street];
                             state.actionOnPlayer = null;
                             if(state.street === 'showdown') {
@@ -384,10 +401,14 @@
                             state.street = 'showdown';
                         } else {
                            state.actionOnPlayer = findNextPlayer(currentPlayerId);
-                           if(state.actionOnPlayer === state.lastAggressorPlayer) {
+                           if(state.actionOnPlayer === state.lastAggressorPlayer || !state.actionOnPlayer) {
                                 state.street = { 'preflop': 'flop', 'flop': 'turn', 'turn': 'river', 'river': 'showdown' }[state.street];
                                 state.actionOnPlayer = null;
-                                logEvent(`<b>${state.street.toUpperCase()}</b> 스트릿으로 진행. 보드를 확인하세요.`, 'system');
+                                if(state.street === 'showdown') {
+                                    logEvent('핸드 종료. 쇼다운으로 진행합니다.', 'system');
+                                } else {
+                                    logEvent(`<b>${state.street.toUpperCase()}</b> 스트릿으로 진행. 보드를 확인하세요.`, 'system');
+                                }
                            } else {
                                logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
                            }
@@ -402,7 +423,13 @@
                         state.lastAggressorPlayer = currentPlayerId;
                         state.actionOnPlayer = findNextPlayer(currentPlayerId);
                          if (state.actionOnPlayer) {
-                             logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
+                             if(state.actionOnPlayer === state.lastAggressorPlayer) {
+                                 state.street = { 'preflop': 'flop', 'flop': 'turn', 'turn': 'river', 'river': 'showdown' }[state.street];
+                                 state.actionOnPlayer = null;
+                                 logEvent(`<b>${state.street.toUpperCase()}</b> 스트릿으로 진행. 보드를 확인하세요.`, 'system');
+                             } else {
+                                logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
+                             }
                          } else {
                             logEvent('액션 가능한 플레이어가 없어 쇼다운으로 진행합니다.', 'system');
                             state.street = 'showdown';
@@ -415,7 +442,13 @@
                              const firstToAct = findNextPlayer(state.dealerButtonPosition);
                              state.actionOnPlayer = firstToAct;
                              state.lastAggressorPlayer = firstToAct;
-                             logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
+                             if(firstToAct) {
+                                logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
+                             } else {
+                                logEvent('액션 가능한 플레이어가 없습니다. 다음 스트릿으로 진행합니다.', 'system');
+                                state.street = { 'flop': 'turn', 'turn': 'river', 'river': 'showdown' }[state.street];
+                                state.actionOnPlayer = null;
+                             }
                         }
                         break;
                     
@@ -480,7 +513,11 @@
                 
                 for (let i = 1; i <= 8; i++) {
                     const btn = document.createElement('button');
-                    btn.className = 'stream-deck-button bg-teal-800';
+                    let bgColor = 'bg-teal-800';
+                    if (state.actionOnPlayer === i) {
+                        bgColor = 'bg-cyan-500 shadow-lg shadow-cyan-500/50';
+                    }
+                    btn.className = `stream-deck-button ${bgColor}`;
                     btn.innerHTML = `<span>CAM 2</span><span class="text-xs text-teal-300">P-${i}</span>`;
                     btn.addEventListener('click', () => logEvent(`P-${i} 보조 카메라로 수동 전환.`, 'info'));
                     grid.appendChild(btn);
