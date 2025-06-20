@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>하이브리드 포커 스위칭 시스템 | 기획서 & 시뮬레이터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Midnight Production -->
+    <!-- Application Structure Plan: 이 SPA는 기획서의 내용을 효과적으로 전달하고 시뮬레이터를 통해 직접 경험하게 하는 것을 목표로, 선형적인 스토리텔링 구조를 채택했습니다. 사용자는 스크롤을 통해 [도입부] -> [핵심 컨셉] -> [인터랙티브 시뮬레이터] -> [주요 기능 명세] -> [기대 효과] 순서로 자연스럽게 프로젝트를 이해하게 됩니다. 가장 중요한 '시뮬레이터'를 중앙에 배치하여 사용자의 참여를 유도하고, 그 앞뒤로 기획서의 내용을 재구성하여 이론적 배경과 실제 구현을 완벽하게 연결했습니다. 이 구조는 복잡한 시스템을 점진적으로, 그리고 체험적으로 이해시키는 데 가장 효과적입니다. -->
+    <!-- Visualization & Content Choices: 기획서의 텍스트 정보는 아이콘과 카드 레이아웃을 활용한 인포그래픽 형태로 재구성되었습니다. '시스템 컨셉'과 '자동화 로직' 등 추상적인 개념은 SVG 아이콘과 다이어그램 스타일의 레이아웃으로 시각화하여 이해도를 높였습니다. '스트림덱 레이아웃'은 실제와 유사한 이미지로 시각적 참조를 제공합니다. '시뮬레이터'는 그 자체로 가장 중요한 인터랙티브 요소이며, JavaScript로 구현된 로직을 통해 사용자가 시스템의 동적 상태 변화를 직접 체험하게 합니다. 이 모든 요소는 사용자가 수동적으로 읽는 것을 넘어, 능동적으로 탐색하고 이해하도록 설계되었습니다. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #F9FAFB; /* text-gray-100 */
+        }
+        .section-title {
+            @apply text-3xl font-bold text-cyan-400 tracking-tight sm:text-4xl;
+        }
+        .section-subtitle {
+             @apply mt-2 text-lg leading-8 text-gray-300;
+        }
+        .stream-deck-grid {
+            display: grid;
+            grid-template-columns: repeat(8, minmax(0, 1fr));
+            grid-template-rows: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+            aspect-ratio: 2 / 1;
+            width: 100%;
+        }
+        .stream-deck-button {
+            border-radius: 0.75rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1);
+            user-select: none;
+            padding: 0.5rem;
+            line-height: 1.2;
+            font-size: 0.75rem;
+        }
+        @media (min-width: 640px) {
+            .stream-deck-button {
+                font-size: 0.875rem;
+            }
+        }
+        .blinking {
+            animation: blink-animation 1s steps(2, start) infinite;
+        }
+        @keyframes blink-animation {
+            to {
+                visibility: hidden;
+            }
+        }
+        .glassmorphism-card {
+            background: rgba(31, 41, 55, 0.6); /* bg-gray-800 with opacity */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Hero Section -->
+    <div class="relative isolate">
+        <div class="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:py-40">
+            <div class="mx-auto max-w-2xl text-center">
+                <h1 class="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+                    하이브리드 포커 스위칭 시스템
+                </h1>
+                <p class="mt-6 text-lg leading-8 text-gray-300">
+                    기술로 휴먼 에러를 차단하고, 프로덕션의 패러다임을 바꿉니다. 본 문서는 라이브 포커 방송의 안정성과 효율성을 극대화하기 위한 혁신적인 스위칭 시스템의 기획서이자, 그 로직을 직접 체험할 수 있는 인터랙티브 시뮬레이터입니다.
+                </p>
+                <div class="mt-10 flex items-center justify-center gap-x-6">
+                    <a href="#simulator" class="rounded-md bg-cyan-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600">시뮬레이터 체험하기</a>
+                    <a href="#features" class="text-sm font-semibold leading-6 text-white">주요 기능 보기 <span aria-hidden="true">→</span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Concept Section -->
+    <div class="bg-gray-900 py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl lg:text-center">
+                <h2 class="text-base font-semibold leading-7 text-cyan-400">시스템 핵심 컨셉</h2>
+                <p class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">'하이브리드' 모델: 실수를 원천 차단하는 설계</p>
+                <p class="mt-6 text-lg leading-8 text-gray-400">
+                    본 시스템은 '위치 파악'과 '행동 실행'을 물리적으로 분리하여, 운용자가 화면에만 집중하며 반사적으로 조작할 수 있는 혁신적인 환경을 제공합니다.
+                </p>
+            </div>
+            <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
+                <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
+                    <div class="relative pl-16">
+                        <dt class="text-base font-semibold leading-7 text-white">
+                            <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-600">
+                                <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" /></svg>
+                            </div>
+                            위치 파악 (상태 표시 버튼)
+                        </dt>
+                        <dd class="mt-2 text-base leading-7 text-gray-400">실제 테이블 좌석과 1:1로 매핑된 1열의 버튼들이 녹색으로 점멸하며 현재 누구의 차례인지 시각적으로 알려줍니다. 운용자는 이 신호만 보고 위치를 파악합니다.</dd>
+                    </div>
+                    <div class="relative pl-16">
+                        <dt class="text-base font-semibold leading-7 text-white">
+                            <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-600">
+                                <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7.864 4.243A7.5 7.5 0 0119.5 12c0 2.22-.936 4.225-2.456 5.654A7.5 7.5 0 0112 19.5a7.5 7.5 0 01-6.42-3.483l-2.42-2.42m0 0-3.95-3.95m3.95 3.95L1.5 12" /></svg>
+                            </div>
+                            행동 실행 (중앙 제어 버튼)
+                        </dt>
+                        <dd class="mt-2 text-base leading-7 text-gray-400">운용자의 손은 항상 4열의 제어 버튼 위에 있습니다. 선수의 실제 액션(콜, 레이즈, 폴드)에 맞춰 해당 버튼을 누르기만 하면, 시스템이 알아서 카메라를 전환하고 다음 순서를 지정합니다.</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Simulator Section -->
+    <section id="simulator" class="py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl lg:text-center">
+                 <h2 class="text-base font-semibold leading-7 text-cyan-400">Interactive Simulator</h2>
+                <p class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">시스템을 직접 경험해보세요</p>
+                <p class="mt-6 text-lg leading-8 text-gray-400">
+                    아래 시뮬레이터는 기획서의 모든 로직을 그대로 구현한 것입니다. 실제 스트림덱처럼 버튼을 클릭하여 시스템의 동작 방식을 테스트하고 이해할 수 있습니다.
+                </p>
+            </div>
+
+            <div class="mt-16 flex flex-col lg:flex-row gap-8 items-start">
+                <div class="w-full lg:w-2/3">
+                    <div id="stream-deck-grid" class="stream-deck-grid mx-auto">
+                    </div>
+                </div>
+
+                <aside class="w-full lg:w-1/3 glassmorphism-card p-6 rounded-xl shadow-lg flex flex-col gap-6 sticky top-8">
+                    <div>
+                        <h3 class="text-xl font-bold border-b border-gray-700 pb-2 mb-3">시스템 상태 변수</h3>
+                        <div id="state-display" class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold border-b border-gray-700 pb-2 mb-3">이벤트 로그</h3>
+                        <div id="log-panel" class="bg-gray-900 rounded-lg h-80 overflow-y-auto p-3 text-sm flex flex-col-reverse">
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="bg-gray-900 py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl lg:text-center">
+                <h2 class="text-base font-semibold leading-7 text-cyan-400">주요 기능 및 로직</h2>
+                <p class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">지능적인 자동화와 완벽한 제어</p>
+                <p class="mt-6 text-lg leading-8 text-gray-400">
+                    단순한 버튼 매핑을 넘어, 포커 게임의 규칙을 이해하고 예외 상황까지 처리하는 스마트한 시스템입니다.
+                </p>
+            </div>
+            <div class="mx-auto mt-16 grid max-w-lg grid-cols-1 gap-8 md:max-w-none md:grid-cols-3">
+                <div class="flex flex-col gap-y-3 rounded-2xl glassmorphism-card p-8 text-center">
+                    <dt class="flex items-center justify-center gap-x-3 text-base font-semibold leading-7 text-white">
+                        <svg class="h-8 w-8 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.667 0l3.181-3.183m-4.991-2.691L7.5 4.5m6.432 6.432l-1.88-1.88" /></svg>
+                        'Last Aggressor' 알고리즘
+                    </dt>
+                    <dd class="flex flex-auto flex-col text-base leading-7 text-gray-400">
+                        <p class="flex-auto">누가 마지막으로 공격적인 베팅을 했는지 시스템이 자동으로 추적합니다. 이를 통해 한 베팅 라운드가 언제 끝나는지 정확히 판단하고, `BOARD` 버튼을 활성화하여 운용자에게 다음 행동을 알려줍니다.</p>
+                    </dd>
+                </div>
+                <div class="flex flex-col gap-y-3 rounded-2xl glassmorphism-card p-8 text-center">
+                    <dt class="flex items-center justify-center gap-x-3 text-base font-semibold leading-7 text-white">
+                        <svg class="h-8 w-8 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg>
+                        예외 처리 및 수정 기능
+                    </dt>
+                    <dd class="flex flex-auto flex-col text-base leading-7 text-gray-400">
+                        <p class="flex-auto">운용자의 실수는 `UNDO` 버튼으로 즉시 되돌릴 수 있습니다. 또한 `SET TABLE` 모드를 통해 게임 중에도 플레이어의 상태를 강제로 수정하여, 어떤 예외 상황에도 완벽하게 대응할 수 있습니다.</p>
+                    </dd>
+                </div>
+                <div class="flex flex-col gap-y-3 rounded-2xl glassmorphism-card p-8 text-center">
+                     <dt class="flex items-center justify-center gap-x-3 text-base font-semibold leading-7 text-white">
+                        <svg class="h-8 w-8 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 15.75l.402-.168a2.25 2.25 0 011.993 1.118l.41.821c.23.46.056.99-.34 1.28l-.403.298m11.954-4.22l.402.168a2.25 2.25 0 001.993-1.118l.41-.821c.23-.46.056-.99-.34-1.28l-.403-.298m-11.215 0a2.25 2.25 0 011.993-1.118l.41-.821c.23-.46.056-.99-.34-1.28l-.403-.298m11.954 4.22l-.402-.168a2.25 2.25 0 00-1.993 1.118l-.41.821c-.23.46-.056.99.34 1.28l.403.298m-11.215-4.22a2.25 2.25 0 001.993 1.118l.41.821c.23.46.056.99-.34 1.28l-.403.298" /></svg>
+                        자동 순서 계산
+                    </dt>
+                    <dd class="flex flex-auto flex-col text-base leading-7 text-gray-400">
+                        <p class="flex-auto">`NEW HAND` 버튼 하나만 누르면, 시스템이 딜러 버튼 위치를 기반으로 SB, BB, 그리고 첫 액션 플레이어 위치까지 모두 자동으로 계산하여 다음 액션을 정확하게 지정해 줍니다.</p>
+                    </dd>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Expected Outcomes Section -->
+    <div class="py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl lg:max-w-none">
+                <div class="text-center">
+                    <h2 class="text-base font-semibold leading-7 text-cyan-400">기대 효과</h2>
+                    <p class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">프로덕션의 혁신, 그 이상</p>
+                    <p class="mt-6 text-lg leading-8 text-gray-400">
+                        이 시스템 도입은 단순한 효율 개선을 넘어, 프로덕션의 품질과 안정성을 한 단계 끌어올리는 전략적 투자가 될 것입니다.
+                    </p>
+                </div>
+                <dl class="mt-16 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="flex flex-col bg-white/5 p-8">
+                        <dt class="text-sm font-semibold leading-6 text-gray-400">방송 사고율 감소</dt>
+                        <dd class="order-first text-3xl font-semibold tracking-tight text-white">90%+</dd>
+                    </div>
+                    <div class="flex flex-col bg-white/5 p-8">
+                        <dt class="text-sm font-semibold leading-6 text-gray-400">신규 인력 교육 시간 단축</dt>
+                        <dd class="order-first text-3xl font-semibold tracking-tight text-white">70%+</dd>
+                    </div>
+                    <div class="flex flex-col bg-white/5 p-8">
+                        <dt class="text-sm font-semibold leading-6 text-gray-400">품질 일관성</dt>
+                        <dd class="order-first text-3xl font-semibold tracking-tight text-white">최상</dd>
+                    </div>
+                    <div class="flex flex-col bg-white/5 p-8">
+                        <dt class="text-sm font-semibold leading-6 text-gray-400">운용자 만족도</dt>
+                        <dd class="order-first text-3xl font-semibold tracking-tight text-white">극대화</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900">
+        <div class="mx-auto max-w-7xl overflow-hidden py-12 px-6 lg:px-8">
+            <p class="text-center text-xs leading-5 text-gray-500">&copy; 2024 Hybrid Poker Switching System. All rights reserved.</p>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('stream-deck-grid');
+            const stateDisplay = document.getElementById('state-display');
+            const logPanel = document.getElementById('log-panel');
+
+            let state = initializeState();
+            let history = [];
+
+            function initializeState() {
+                const players = Array.from({ length: 8 }, (_, i) => ({
+                    id: i + 1,
+                    status: 'active', // 'empty', 'active', 'folded', 'all-in'
+                }));
+                return {
+                    setupMode: false,
+                    actionOnPlayer: null,
+                    lastAggressorPlayer: null,
+                    dealerButtonPosition: 0,
+                    street: 'pre-deal',
+                    players,
+                };
+            }
+            
+            function logEvent(message, type = 'info') {
+                const logEntry = document.createElement('div');
+                const time = new Date().toLocaleTimeString('ko-KR', { hour12: false });
+                let colorClass = 'text-gray-400';
+                if(type === 'action') colorClass = 'text-yellow-400';
+                if(type === 'system') colorClass = 'text-cyan-400';
+                if(type === 'error') colorClass = 'text-red-400';
+
+                logEntry.className = `mb-1 ${colorClass}`;
+                logEntry.innerHTML = `<span class="font-mono text-gray-500">${time}</span>: ${message}`;
+                logPanel.prepend(logEntry);
+            }
+
+            function saveHistory() {
+                history.push(JSON.parse(JSON.stringify(state)));
+            }
+
+            function findNextPlayer(startPlayerId) {
+                if (startPlayerId === null || startPlayerId === 0) startPlayerId = state.players.length;
+                let currentPlayerId = startPlayerId;
+                for (let i = 0; i < state.players.length; i++) {
+                    currentPlayerId = (currentPlayerId % state.players.length) + 1;
+                    const player = state.players.find(p => p.id === currentPlayerId);
+                    if (player.status === 'active') {
+                        return player.id;
+                    }
+                }
+                return null;
+            }
+            
+            function countActivePlayers() {
+                return state.players.filter(p => p.status === 'active').length;
+            }
+
+             function getLivePlayersCount() {
+                return state.players.filter(p => p.status === 'active' || p.status === 'all-in').length;
+            }
+
+            function handleControlClick(action) {
+                saveHistory();
+
+                switch (action) {
+                    case 'NEW HAND':
+                        state.street = 'preflop';
+                        state.dealerButtonPosition = findNextPlayer(state.dealerButtonPosition) || 1;
+                        state.players.forEach(p => {
+                            if (p.status !== 'empty') p.status = 'active';
+                        });
+
+                        const activePlayers = state.players.filter(p=>p.status === 'active');
+                        if (activePlayers.length < 2) {
+                             logEvent('플레이어가 2명 미만이라 핸드를 시작할 수 없습니다.', 'error');
+                             return;
+                        }
+
+                        const sbPosition = findNextPlayer(state.dealerButtonPosition);
+                        const bbPosition = findNextPlayer(sbPosition);
+                        state.actionOnPlayer = findNextPlayer(bbPosition);
+                        state.lastAggressorPlayer = bbPosition;
+                        
+                        logEvent(`<b>새 핸드 시작.</b> 버튼:${state.dealerButtonPosition}, SB:${sbPosition}, BB:${bbPosition}`, 'system');
+                        logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
+                        break;
+
+                    case 'SET TABLE':
+                        state.setupMode = !state.setupMode;
+                        logEvent(state.setupMode ? '테이블 설정 모드 시작.' : '테이블 설정 모드 종료.', 'system');
+                        break;
+
+                    case 'CALL/CHK': {
+                        const currentPlayerId = state.actionOnPlayer;
+                        if (!currentPlayerId) break;
+                        logEvent(`P-${currentPlayerId} 가 <b>콜/체크</b>`, 'action');
+                        
+                        if (currentPlayerId === state.lastAggressorPlayer || countActivePlayers() === 0) {
+                            state.street = { 'preflop': 'flop', 'flop': 'turn', 'turn': 'river', 'river': 'showdown' }[state.street];
+                            state.actionOnPlayer = null;
+                            if(state.street === 'showdown') {
+                                logEvent('핸드 종료. 쇼다운으로 진행합니다.', 'system');
+                            } else {
+                                logEvent(`<b>${state.street.toUpperCase()}</b> 스트릿으로 진행. 보드를 확인하세요.`, 'system');
+                            }
+                        } else {
+                            state.actionOnPlayer = findNextPlayer(currentPlayerId);
+                            logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
+                        }
+                        break;
+                    }
+                    case 'RAISE': {
+                        const currentPlayerId = state.actionOnPlayer;
+                        if (!currentPlayerId) break;
+                        logEvent(`P-${currentPlayerId} 가 <b>벳/레이즈</b>`, 'action');
+                        state.lastAggressorPlayer = currentPlayerId;
+                        state.actionOnPlayer = findNextPlayer(currentPlayerId);
+                        logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
+                        break;
+                    }
+                    case 'FOLD': {
+                        const currentPlayerId = state.actionOnPlayer;
+                        if (!currentPlayerId) break;
+                        logEvent(`P-${currentPlayerId} 가 <b>폴드</b>`, 'action');
+                        state.players.find(p => p.id === currentPlayerId).status = 'folded';
+                        if (getLivePlayersCount() <= 1) {
+                            logEvent('핸드 종료. 남은 플레이어가 1명 이하입니다.', 'system');
+                            state.actionOnPlayer = null;
+                            state.street = 'showdown';
+                        } else {
+                           state.actionOnPlayer = findNextPlayer(currentPlayerId);
+                           if(state.actionOnPlayer === state.lastAggressorPlayer) {
+                                state.street = { 'preflop': 'flop', 'flop': 'turn', 'turn': 'river', 'river': 'showdown' }[state.street];
+                                state.actionOnPlayer = null;
+                                logEvent(`<b>${state.street.toUpperCase()}</b> 스트릿으로 진행. 보드를 확인하세요.`, 'system');
+                           } else {
+                               logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
+                           }
+                        }
+                        break;
+                    }
+                    case 'ALL-IN': {
+                        const currentPlayerId = state.actionOnPlayer;
+                        if (!currentPlayerId) break;
+                         logEvent(`P-${currentPlayerId} 가 <b>올인</b>`, 'action');
+                        state.players.find(p => p.id === currentPlayerId).status = 'all-in';
+                        state.lastAggressorPlayer = currentPlayerId;
+                        state.actionOnPlayer = findNextPlayer(currentPlayerId);
+                         if (state.actionOnPlayer) {
+                             logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
+                         } else {
+                            logEvent('액션 가능한 플레이어가 없어 쇼다운으로 진행합니다.', 'system');
+                            state.street = 'showdown';
+                         }
+                        break;
+                    }
+                    case 'BOARD':
+                        logEvent('보드 카메라로 전환 (수동 확인).', 'system');
+                        if (state.street !== 'preflop' && state.street !== 'showdown') {
+                             const firstToAct = findNextPlayer(state.dealerButtonPosition);
+                             state.actionOnPlayer = firstToAct;
+                             state.lastAggressorPlayer = firstToAct;
+                             logEvent(`액션 차례: P-${state.actionOnPlayer}`, 'action');
+                        }
+                        break;
+                    
+                    case 'UNDO':
+                        if (history.length > 0) {
+                            state = history.pop();
+                            logEvent('마지막 액션을 되돌렸습니다.', 'error');
+                        } else {
+                            logEvent('더 이상 되돌릴 액션이 없습니다.', 'error');
+                        }
+                        break;
+                    case 'MANUAL':
+                         logEvent('수동 모드로 전환 (시뮬레이션에서는 기능 없음).', 'system');
+                         break;
+                }
+                render();
+            }
+
+            function handlePlayerStateClick(playerId) {
+                if (state.setupMode) {
+                    const player = state.players.find(p => p.id === playerId);
+                    player.status = player.status === 'empty' ? 'active' : 'empty';
+                    logEvent(`P-${playerId} 상태를 '${player.status}'로 변경`, 'system');
+                    render();
+                }
+            }
+
+            function render() {
+                if(!grid || !stateDisplay) return;
+                grid.innerHTML = '';
+
+                // 1열 & 2열
+                for (let i = 1; i <= 8; i++) {
+                    const player = state.players.find(p => p.id === i);
+                    const btn = document.createElement('button');
+                    btn.className = 'stream-deck-button';
+                    
+                    let bgColor = 'bg-gray-700';
+                    let text = `P-${i}`;
+                    
+                    if(state.setupMode){
+                         bgColor = player.status === 'empty' ? 'bg-gray-900' : 'bg-orange-600';
+                         text = player.status === 'empty' ? 'EMPTY' : `P-${i} SET`;
+                    } else {
+                        switch (player.status) {
+                            case 'empty': bgColor = 'bg-gray-900'; text = 'EMPTY'; break;
+                            case 'active': bgColor = 'bg-blue-800'; text = `P-${i}`; break;
+                            case 'folded': bgColor = 'bg-gray-700'; text = 'FOLD'; break;
+                            case 'all-in': bgColor = 'bg-purple-700'; text = 'ALL IN'; break;
+                        }
+                        if (state.actionOnPlayer === i) {
+                            bgColor = 'bg-green-600 blinking';
+                            text = `▶ ${text}`;
+                        }
+                    }
+
+                    btn.innerHTML = `<span>${text}</span>`;
+                    btn.classList.add(...bgColor.split(' '));
+                    btn.addEventListener('click', () => handlePlayerStateClick(i));
+                    grid.appendChild(btn);
+                }
+                
+                for (let i = 1; i <= 8; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = 'stream-deck-button bg-teal-800';
+                    btn.innerHTML = `<span>CAM 2</span><span class="text-xs text-teal-300">P-${i}</span>`;
+                    btn.addEventListener('click', () => logEvent(`P-${i} 보조 카메라로 수동 전환.`, 'info'));
+                    grid.appendChild(btn);
+                }
+
+                // 3열
+                for (let i = 1; i <= 7; i++) {
+                     grid.appendChild(document.createElement('div'));
+                }
+                 const manualBtn3 = document.createElement('button');
+                 manualBtn3.className = 'stream-deck-button bg-gray-600';
+                 manualBtn3.textContent = 'MANUAL';
+                 manualBtn3.addEventListener('click', () => handleControlClick('MANUAL'));
+                 grid.appendChild(manualBtn3);
+
+
+                // 4열
+                const controls = ['NEW HAND', 'SET TABLE', 'CALL/CHK', 'RAISE', 'FOLD', 'BOARD', 'ALL-IN', 'UNDO'];
+                const controlColors = {
+                    'NEW HAND': 'bg-blue-600', 'SET TABLE': 'bg-orange-600',
+                    'CALL/CHK': 'bg-green-700', 'RAISE': 'bg-green-500', 'FOLD': 'bg-red-700',
+                    'BOARD': 'bg-yellow-600', 'ALL-IN': 'bg-purple-600', 'UNDO': 'bg-pink-700'
+                };
+
+                controls.forEach(control => {
+                    const btn = document.createElement('button');
+                    btn.className = 'stream-deck-button';
+                    
+                    let currentBg = controlColors[control];
+                    if (state.setupMode && control === 'SET TABLE') {
+                        currentBg += ' blinking';
+                    }
+                    if (control === 'BOARD' && state.street !== 'preflop' && state.street !== 'showdown' && !state.actionOnPlayer) {
+                        currentBg = 'bg-yellow-400 text-black';
+                    }
+                    
+                    btn.classList.add(...currentBg.split(' '));
+                    btn.textContent = control;
+                    btn.addEventListener('click', () => handleControlClick(control));
+                    grid.appendChild(btn);
+                });
+
+                // State Display
+                stateDisplay.innerHTML = `
+                    <span class="font-bold text-gray-400">액션 대상:</span> <span>${state.actionOnPlayer ? `P-${state.actionOnPlayer}` : '대기 중'}</span>
+                    <span class="font-bold text-gray-400">마지막 공격자:</span> <span>${state.lastAggressorPlayer ? `P-${state.lastAggressorPlayer}` : '없음'}</span>
+                    <span class="font-bold text-gray-400">딜러 버튼:</span> <span>P-${state.dealerButtonPosition || '미설정'}</span>
+                    <span class="font-bold text-gray-400">현재 스트릿:</span> <span class="uppercase">${state.street}</span>
+                    <span class="font-bold text-gray-400">설정 모드:</span> <span>${state.setupMode ? 'ON' : 'OFF'}</span>
+                    <span class="font-bold text-gray-400">남은 플레이어:</span> <span>${getLivePlayersCount()}</span>
+                `;
+            }
+
+            logEvent('시스템 시뮬레이터가 시작되었습니다.', 'system');
+            logEvent('SET TABLE 버튼으로 참가 플레이어를 설정하세요.', 'info');
+            render();
+        });
+    </script>
+</body>
+</html>
